@@ -145,6 +145,120 @@ body {
 }
 
 /* ======= メモパネル ======= */
+
+/* タブバー */
+#memo-tabbar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
+  scrollbar-width: none;
+  padding: 0 4px;
+  gap: 2px;
+}
+
+#memo-tabbar::-webkit-scrollbar {
+  display: none;
+}
+
+.memo-tab {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s;
+  max-width: 120px;
+  user-select: none;
+}
+
+.memo-tab:hover {
+  background: var(--btn-hover);
+  color: var(--text);
+}
+
+.memo-tab.active {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+.memo-tab-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.memo-tab-close {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0 2px;
+  border-radius: 3px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.memo-tab-close:hover {
+  background: var(--danger);
+  color: white;
+}
+
+#memo-add-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 16px;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+#memo-add-btn:hover {
+  background: var(--btn-hover);
+  color: var(--text);
+}
+
+/* エディタエリア（行番号 + テキストエリア） */
+#memo-editor-area {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+#line-numbers {
+  width: 36px;
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  line-height: 1.7;
+  padding: 12px 6px 12px 0;
+  text-align: right;
+  overflow: hidden;
+  flex-shrink: 0;
+  white-space: pre;
+  border-right: 1px solid var(--border);
+  user-select: none;
+}
+
 #memo-input {
   flex: 1;
   background: var(--bg);
@@ -157,6 +271,7 @@ body {
   outline: none;
   line-height: 1.7;
   user-select: text;
+  min-width: 0;
 }
 
 #memo-input::placeholder {
@@ -174,6 +289,34 @@ body {
   color: var(--text-dim);
   height: 26px;
   flex-shrink: 0;
+}
+
+#memo-status-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#line-num-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: monospace;
+  padding: 1px 5px;
+  border-radius: 3px;
+  transition: background 0.1s, color 0.1s;
+}
+
+#line-num-toggle:hover {
+  background: var(--btn-hover);
+  color: var(--text);
+}
+
+#line-num-toggle.active {
+  background: var(--surface2);
+  color: var(--accent);
 }
 
 #save-status {

@@ -22,10 +22,19 @@
 
     <!-- メモパネル -->
     <div id="panel-memo" class="panel active">
-      <textarea id="memo-input" placeholder="メモを入力..."></textarea>
+      <div id="memo-tabbar">
+        <button id="memo-add-btn" title="新しいメモ">+</button>
+      </div>
+      <div id="memo-editor-area">
+        <div id="line-numbers" class="hidden"></div>
+        <textarea id="memo-input" placeholder="メモを入力..."></textarea>
+      </div>
       <div id="memo-status">
         <span id="char-count">0 文字</span>
-        <span id="save-status"></span>
+        <div id="memo-status-right">
+          <button id="line-num-toggle" title="行番号表示">#</button>
+          <span id="save-status"></span>
+        </div>
       </div>
     </div>
 

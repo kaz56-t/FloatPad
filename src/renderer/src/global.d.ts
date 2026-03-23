@@ -1,8 +1,10 @@
 export {}
 
-interface MemoMeta {
-  id: number
-  name: string
+declare global {
+  interface MemoMeta {
+    id: number
+    name: string
+  }
 }
 
 interface Settings {

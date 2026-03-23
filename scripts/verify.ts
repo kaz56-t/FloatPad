@@ -25,24 +25,42 @@ async function run(): Promise<void> {
   // --- ② メモタブ：入力 → 自動保存確認 ---
   try {
     await win.click('[data-tab="memo"]')
-    await win.waitForTimeout(300)
-    await win.evaluate(async () => {
-      const textarea = document.querySelector('textarea') as HTMLTextAreaElement
-      if (textarea) {
-        textarea.value = 'Playwright テスト 12345'
-        textarea.dispatchEvent(new Event('input', { bubbles: true }))
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (window as any).api.memoSave('Playwright テスト 12345')
-    })
     await win.waitForTimeout(500)
-    // user-data はプロジェクト内なので直接参照可能
-    const memoPath = path.join(process.cwd(), 'user-data', 'memo.txt')
+    await win.locator('textarea').fill('Playwright テスト 12345')
+    await win.waitForTimeout(1500) // debounce 待機
+    const memoPath = path.join(process.cwd(), 'user-data', 'memo-1.txt')
     const saved = await fs.readFile(memoPath, 'utf-8')
     results['メモ自動保存'] = saved.includes('Playwright テスト 12345') ? 'OK' : `FAIL: 内容不一致`
     await win.screenshot({ path: `${RESULTS_DIR}/02_memo.png` })
   } catch (e) {
     results['メモ自動保存'] = `FAIL: ${e}`
+  }
+
+  // --- ②-b 複数メモ：新規作成 → タブ数確認 ---
+  try {
+    await win.click('[data-tab="memo"]')
+    await win.waitForTimeout(300)
+    await win.click('#memo-add-btn')
+    await win.waitForTimeout(300)
+    const tabCount = await win.locator('.memo-tab').count()
+    results['複数メモ作成'] = tabCount >= 2 ? 'OK' : `FAIL: タブ数=${tabCount}`
+    await win.screenshot({ path: `${RESULTS_DIR}/02b_multi_memo.png` })
+  } catch (e) {
+    results['複数メモ作成'] = `FAIL: ${e}`
+  }
+
+  // --- ②-c 行番号：トグル確認 ---
+  try {
+    await win.click('[data-tab="memo"]')
+    await win.waitForTimeout(300)
+    await win.click('#line-num-toggle')
+    await win.waitForTimeout(200)
+    const visible = await win.locator('#line-numbers').isVisible()
+    results['行番号表示'] = visible ? 'OK' : 'FAIL: 行番号が表示されない'
+    await win.screenshot({ path: `${RESULTS_DIR}/02c_line_numbers.png` })
+    await win.click('#line-num-toggle') // 元に戻す
+  } catch (e) {
+    results['行番号表示'] = `FAIL: ${e}`
   }
 
   // --- ③ 電卓タブ：3 + 4 = 7 ---
