@@ -7,13 +7,16 @@
     <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
-    <!-- タイトルバー（ドラッグハンドル + タブ + 閉じるボタン） -->
+    <!-- タイトルバー -->
     <div id="titlebar">
       <div id="tabs">
-        <button class="tab active" data-tab="memo">メモ</button>
-        <button class="tab" data-tab="calculator">電卓</button>
+        <button class="tab active" data-tab="memo">Memo</button>
+        <button class="tab" data-tab="calculator">Calc</button>
         <button class="tab" data-tab="web">Web</button>
       </div>
+      <!-- ドラッグ可能な空白領域 -->
+      <div id="drag-region"></div>
+      <button id="settings-btn" title="設定">⚙</button>
       <button id="close-btn" title="閉じる">✕</button>
     </div>
 
@@ -72,6 +75,32 @@
         <webview id="webview" src="about:blank"></webview>
         <div id="web-spinner" class="hidden">読み込み中...</div>
         <div id="web-error" class="hidden"></div>
+      </div>
+    </div>
+
+    <!-- 設定パネル -->
+    <div id="panel-settings" class="panel">
+      <div class="settings-body">
+        <section class="settings-section">
+          <h2>メモ保存場所</h2>
+          <div class="settings-row">
+            <input id="memo-dir-input" type="text" readonly placeholder="デフォルト (user-data/)" />
+            <button id="memo-dir-browse">…</button>
+          </div>
+          <p class="settings-hint">memo.txt が保存されるフォルダを選択します</p>
+        </section>
+
+        <section class="settings-section">
+          <h2>ウィンドウ透過度</h2>
+          <div class="settings-row">
+            <input id="opacity-slider" type="range" min="30" max="100" step="5" value="100" />
+            <span id="opacity-value">100%</span>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <button id="settings-reset" class="settings-reset-btn">デフォルトに戻す</button>
+        </section>
       </div>
     </div>
 

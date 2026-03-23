@@ -6,6 +6,7 @@ interface Settings {
   lastTab: string
   lastUrl: string
   opacity: number
+  memoDir: string
 }
 
 declare global {
@@ -15,6 +16,8 @@ declare global {
       memoLoad: () => Promise<string>
       settingsSave: (data: object) => Promise<boolean>
       settingsLoad: () => Promise<Settings>
+      windowSetOpacity: (opacity: number) => Promise<boolean>
+      chooseFolder: () => Promise<string | null>
     }
   }
 }

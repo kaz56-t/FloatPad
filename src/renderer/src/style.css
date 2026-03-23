@@ -44,8 +44,15 @@ body {
 #tabs {
   display: flex;
   gap: 2px;
-  flex: 1;
+  flex-shrink: 0;
   -webkit-app-region: no-drag;
+}
+
+/* タブと右端ボタンの間のドラッグ可能な空白 */
+#drag-region {
+  flex: 1;
+  height: 100%;
+  -webkit-app-region: drag;
 }
 
 .tab {
@@ -89,6 +96,30 @@ body {
 #close-btn:hover {
   background: var(--danger);
   color: white;
+}
+
+#settings-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  -webkit-app-region: no-drag;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+
+#settings-btn:hover,
+#settings-btn.active {
+  background: var(--btn-hover);
+  color: var(--text);
 }
 
 /* ======= パネル共通 ======= */
@@ -332,4 +363,104 @@ webview {
 
 .hidden {
   display: none !important;
+}
+
+/* ======= 設定パネル ======= */
+.settings-body {
+  padding: 20px 16px;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-section h2 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-row input[type="text"] {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 12px;
+  outline: none;
+  user-select: text;
+  min-width: 0;
+}
+
+.settings-row input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+#memo-dir-browse {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 13px;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+
+#memo-dir-browse:hover {
+  background: var(--btn-hover);
+}
+
+.settings-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+#opacity-value {
+  font-size: 13px;
+  color: var(--text);
+  min-width: 40px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.settings-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.settings-reset-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 6px 14px;
+  font-size: 12px;
+  transition: background 0.1s, color 0.1s;
+  align-self: flex-start;
+}
+
+.settings-reset-btn:hover {
+  background: var(--btn-hover);
+  color: var(--text);
 }

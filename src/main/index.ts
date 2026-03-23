@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
 import { join } from 'path'
 import { promises as fs } from 'fs'
 
@@ -15,6 +15,7 @@ interface Settings {
   lastTab: string
   lastUrl: string
   opacity: number
+  memoDir: string  // 空文字 = user-data/ を使用
 }
 
 const defaultSettings: Settings = {
@@ -22,7 +23,8 @@ const defaultSettings: Settings = {
   windowBounds: { x: 100, y: 100, width: 420, height: 560 },
   lastTab: 'memo',
   lastUrl: 'https://www.google.com',
-  opacity: 100
+  opacity: 100,
+  memoDir: ''
 }
 
 // データはプロジェクトフォルダ内の user-data/ に保存
@@ -35,7 +37,8 @@ function getSettingsPath(): string {
 }
 
 function getMemoPath(): string {
-  return join(getDataDir(), 'memo.txt')
+  const dir = currentSettings.memoDir
+  return dir ? join(dir, 'memo.txt') : join(getDataDir(), 'memo.txt')
 }
 
 async function loadSettings(): Promise<Settings> {
@@ -79,6 +82,11 @@ async function createWindow(): Promise<void> {
       webviewTag: true
     }
   })
+
+  // 保存された透過度を反映
+  if (currentSettings.opacity < 100) {
+    win.setOpacity(currentSettings.opacity / 100)
+  }
 
   // ウィンドウ閉時に位置・サイズを保存
   win.on('close', () => {
@@ -126,6 +134,30 @@ ipcMain.handle('settings:save', async (_, data: Partial<Settings>) => {
   currentSettings = { ...currentSettings, ...data }
   await saveSettings(currentSettings)
   return true
+})
+
+// IPC: 透過度変更
+ipcMain.handle('window:setOpacity', async (event, opacity: number) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (win) {
+    win.setOpacity(Math.max(0.3, Math.min(1, opacity / 100)))
+    currentSettings.opacity = opacity
+    await saveSettings(currentSettings)
+  }
+  return true
+})
+
+// IPC: フォルダ選択ダイアログ
+ipcMain.handle('dialog:chooseFolder', async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  const result = await dialog.showOpenDialog(win!, {
+    properties: ['openDirectory', 'createDirectory'],
+    title: 'メモ保存フォルダを選択'
+  })
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0]
+  }
+  return null
 })
 
 // target="_blank" リンクをシステムブラウザで開く
