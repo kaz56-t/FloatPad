@@ -1,0 +1,335 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #1e1e1e;
+  --surface: #2a2a2a;
+  --surface2: #333;
+  --border: #3d3d3d;
+  --text: #e0e0e0;
+  --text-dim: #888;
+  --accent: #4a9eff;
+  --accent-hover: #65adff;
+  --danger: #e53e3e;
+  --btn-hover: #3a3a3a;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Yu Gothic UI', sans-serif;
+  font-size: 14px;
+  user-select: none;
+}
+
+/* ======= タイトルバー ======= */
+#titlebar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+
+#tabs {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  -webkit-app-region: no-drag;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 5px 14px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 13px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tab:hover {
+  background: var(--btn-hover);
+  color: var(--text);
+}
+
+.tab.active {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+#close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  -webkit-app-region: no-drag;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+#close-btn:hover {
+  background: var(--danger);
+  color: white;
+}
+
+/* ======= パネル共通 ======= */
+.panel {
+  display: none;
+  height: calc(100vh - 40px);
+}
+
+.panel.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ======= メモパネル ======= */
+#memo-input {
+  flex: 1;
+  background: var(--bg);
+  color: var(--text);
+  border: none;
+  padding: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  line-height: 1.7;
+  user-select: text;
+}
+
+#memo-input::placeholder {
+  color: var(--text-dim);
+}
+
+#memo-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-dim);
+  height: 26px;
+  flex-shrink: 0;
+}
+
+#save-status {
+  color: var(--accent);
+  font-size: 11px;
+}
+
+/* ======= 電卓パネル ======= */
+#panel-calculator {
+  padding: 8px;
+  gap: 6px;
+  overflow: hidden;
+}
+
+#calc-history {
+  font-size: 11px;
+  color: var(--text-dim);
+  min-height: 16px;
+  max-height: 68px;
+  overflow-y: auto;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.calc-history-item {
+  text-align: right;
+  padding: 1px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#calc-display {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 8px 14px;
+  text-align: right;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+#calc-display:hover {
+  background: var(--surface2);
+}
+
+#calc-expression {
+  font-size: 12px;
+  color: var(--text-dim);
+  min-height: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#calc-result {
+  font-size: 34px;
+  font-weight: 300;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+#calc-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  flex: 1;
+}
+
+.calc-btn {
+  background: var(--surface);
+  border: none;
+  color: var(--text);
+  border-radius: 8px;
+  font-size: 17px;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.05s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.calc-btn:hover {
+  background: var(--btn-hover);
+}
+
+.calc-btn:active {
+  transform: scale(0.94);
+}
+
+.calc-btn.func {
+  background: #3a3a3a;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.calc-btn.func:hover {
+  background: #444;
+}
+
+.calc-btn.operator {
+  background: var(--accent);
+  color: white;
+}
+
+.calc-btn.operator:hover {
+  background: var(--accent-hover);
+}
+
+.calc-btn.wide {
+  grid-column: span 2;
+}
+
+/* ======= Webビューアパネル ======= */
+#web-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+#web-nav button {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px 7px;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: background 0.1s, color 0.1s;
+  flex-shrink: 0;
+}
+
+#web-nav button:hover {
+  background: var(--btn-hover);
+  color: var(--text);
+}
+
+#web-url {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 4px 8px;
+  font-size: 12px;
+  outline: none;
+  user-select: text;
+  min-width: 0;
+}
+
+#web-url:focus {
+  border-color: var(--accent);
+}
+
+#web-content {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+webview {
+  width: 100%;
+  height: 100%;
+  background: white;
+}
+
+#web-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-dim);
+  font-size: 13px;
+  background: var(--bg);
+  padding: 8px 16px;
+  border-radius: 6px;
+}
+
+#web-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fc8181;
+  font-size: 13px;
+  text-align: center;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-radius: 8px;
+  max-width: 80%;
+}
+
+.hidden {
+  display: none !important;
+}

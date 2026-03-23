@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>FloatPad</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <!-- タイトルバー（ドラッグハンドル + タブ + 閉じるボタン） -->
+    <div id="titlebar">
+      <div id="tabs">
+        <button class="tab active" data-tab="memo">メモ</button>
+        <button class="tab" data-tab="calculator">電卓</button>
+        <button class="tab" data-tab="webviewer">Web</button>
+      </div>
+      <button id="close-btn" title="閉じる">✕</button>
+    </div>
+
+    <!-- メモパネル -->
+    <div id="panel-memo" class="panel active">
+      <textarea id="memo-input" placeholder="メモを入力..."></textarea>
+      <div id="memo-status">
+        <span id="char-count">0 文字</span>
+        <span id="save-status"></span>
+      </div>
+    </div>
+
+    <!-- 電卓パネル -->
+    <div id="panel-calculator" class="panel">
+      <div id="calc-history"></div>
+      <div id="calc-display">
+        <div id="calc-expression"></div>
+        <div id="calc-result" title="クリックでコピー">0</div>
+      </div>
+      <div id="calc-buttons">
+        <button class="calc-btn func" data-key="AC">AC</button>
+        <button class="calc-btn func" data-key="+/-">+/-</button>
+        <button class="calc-btn func" data-key="%">%</button>
+        <button class="calc-btn operator" data-key="÷">÷</button>
+
+        <button class="calc-btn number" data-key="7">7</button>
+        <button class="calc-btn number" data-key="8">8</button>
+        <button class="calc-btn number" data-key="9">9</button>
+        <button class="calc-btn operator" data-key="×">×</button>
+
+        <button class="calc-btn number" data-key="4">4</button>
+        <button class="calc-btn number" data-key="5">5</button>
+        <button class="calc-btn number" data-key="6">6</button>
+        <button class="calc-btn operator" data-key="-">-</button>
+
+        <button class="calc-btn number" data-key="1">1</button>
+        <button class="calc-btn number" data-key="2">2</button>
+        <button class="calc-btn number" data-key="3">3</button>
+        <button class="calc-btn operator" data-key="+">+</button>
+
+        <button class="calc-btn number wide" data-key="0">0</button>
+        <button class="calc-btn number" data-key=".">.</button>
+        <button class="calc-btn operator" data-key="=">=</button>
+      </div>
+    </div>
+
+    <!-- Webビューアパネル -->
+    <div id="panel-webviewer" class="panel">
+      <div id="web-nav">
+        <button id="web-back" title="戻る">◀</button>
+        <button id="web-forward" title="進む">▶</button>
+        <button id="web-reload" title="更新">⟳</button>
+        <input id="web-url" type="text" placeholder="URLまたは検索ワードを入力..." />
+      </div>
+      <div id="web-content">
+        <webview id="webview" src="about:blank"></webview>
+        <div id="web-spinner" class="hidden">読み込み中...</div>
+        <div id="web-error" class="hidden"></div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
