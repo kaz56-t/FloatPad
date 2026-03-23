@@ -132,11 +132,114 @@ floatpad/
 - [ ] `target="_blank"` リンクはシステムブラウザで開く（`shell.openExternal`）
 - [ ] **git commit: "feat: webviewer tab"**
 
-### フェーズ6: 仕上げ・動作確認
+### フェーズ6: 仕上げ・自動動作確認
+
+#### 6-1: 型チェック・準備
 - [ ] `npm run typecheck` でTypeScriptエラーが0件であることを確認
-- [ ] `npm run dev` で全タブの動作確認
-- [ ] PROGRESS.md に最終状態を記録
-- [ ] **git commit: "feat: v1.0 complete"**
+- [ ] `npx playwright install` で Playwright をセットアップ
+- [ ] `test-results/` ディレクトリを作成
+- [ ] **git commit: "feat: impl complete, ready for testing"**
+
+#### 6-2: Playwright による自動動作確認
+以下のテストスクリプト `scripts/verify.ts` を作成して実行すること。
+
+```typescript
+// scripts/verify.ts
+// 実行: npx ts-node scripts/verify.ts
+import { _electron as electron } from 'playwright'
+import * as fs from 'fs/promises'
+import * as path from 'path'
+
+const RESULTS_DIR = 'test-results'
+
+async function run() {
+  await fs.mkdir(RESULTS_DIR, { recursive: true })
+  const results: Record<string, string> = {}
+
+  const app = await electron.launch({ args: ['.'] })
+  const win = await app.firstWindow()
+  await win.waitForLoadState('domcontentloaded')
+
+  // --- ① ウィンドウ表示確認 ---
+  try {
+    await win.screenshot({ path: `${RESULTS_DIR}/01_launch.png` })
+    results['ウィンドウ起動'] = 'OK'
+  } catch (e) {
+    results['ウィンドウ起動'] = `FAIL: ${e}`
+  }
+
+  // --- ② メモタブ：入力 → 自動保存確認 ---
+  try {
+    await win.click('[data-tab="memo"]')
+    await win.fill('textarea', 'Playwright テスト 12345')
+    await win.waitForTimeout(1500) // debounce 待機
+    const saved = await fs.readFile(
+      path.join(process.env.HOME!, 'Documents/FloatPad/memo.txt'), 'utf-8'
+    )
+    results['メモ自動保存'] = saved.includes('Playwright テスト 12345') ? 'OK' : 'FAIL: 内容不一致'
+    await win.screenshot({ path: `${RESULTS_DIR}/02_memo.png` })
+  } catch (e) {
+    results['メモ自動保存'] = `FAIL: ${e}`
+  }
+
+  // --- ③ 電卓タブ：3 + 4 = 7 ---
+  try {
+    await win.click('[data-tab="calculator"]')
+    await win.click('[data-key="3"]')
+    await win.click('[data-key="+"]')
+    await win.click('[data-key="4"]')
+    await win.click('[data-key="="]')
+    const display = await win.textContent('[data-display]')
+    results['電卓演算'] = display?.trim() === '7' ? 'OK' : `FAIL: 表示="${display}"`
+    await win.screenshot({ path: `${RESULTS_DIR}/03_calculator.png` })
+  } catch (e) {
+    results['電卓演算'] = `FAIL: ${e}`
+  }
+
+  // --- ④ Webビューアタブ：URL入力 → ページ表示 ---
+  try {
+    await win.click('[data-tab="web"]')
+    await win.fill('[data-url-input]', 'https://example.com')
+    await win.keyboard.press('Enter')
+    await win.waitForTimeout(3000) // ページロード待機
+    await win.screenshot({ path: `${RESULTS_DIR}/04_webviewer.png` })
+    results['Webビューア'] = 'OK (スクリーンショット確認)'
+  } catch (e) {
+    results['Webビューア'] = `FAIL: ${e}`
+  }
+
+  await app.close()
+
+  // --- 結果レポート出力 ---
+  const report = [
+    '# 動作確認レポート',
+    `実行日時: ${new Date().toLocaleString('ja-JP')}`,
+    '',
+    '## 結果',
+    ...Object.entries(results).map(([k, v]) => `- **${k}**: ${v}`),
+    '',
+    '## スクリーンショット',
+    '`test-results/` フォルダを確認してください。',
+  ].join('\n')
+
+  await fs.writeFile(`${RESULTS_DIR}/report.md`, report)
+  console.log(report)
+
+  const failed = Object.values(results).filter(v => v.startsWith('FAIL'))
+  if (failed.length > 0) {
+    console.error(`\n${failed.length}件のテストが失敗しました。`)
+    process.exit(1)
+  }
+}
+
+run().catch(console.error)
+```
+
+- [ ] `npx ts-node scripts/verify.ts` を実行
+- [ ] `test-results/report.md` を確認、FAIL があれば修正して再実行
+- [ ] `test-results/*.png` のスクリーンショットで視覚的に確認
+- [ ] PROGRESS.md に確認結果を記録
+- [ ] **git commit: "test: playwright verification passed"**
 
 ---
 
@@ -291,7 +394,8 @@ memo.jsのdebounce実装を完了させ、git commitする
 2. `git log --oneline -10` — 最近のコミット履歴を確認
 3. `ls src/main src/preload src/renderer/src` — ファイル存在確認
 4. `npm run typecheck` — 型エラーの現状把握
-5. 上記タスクリストの未完了フェーズから再開
+5. `ls test-results/` — テスト結果が存在する場合は `cat test-results/report.md` で確認
+6. 上記タスクリストの未完了フェーズから再開
 
 ---
 
@@ -301,10 +405,7 @@ memo.jsのdebounce実装を完了させ、git commitする
 
 - `npm run typecheck` でTypeScriptエラーが0件
 - `npm run dev` でアプリが起動する
-- 3タブ（メモ・電卓・Web）が切り替えられる
-- ウィンドウが常に最前面に表示される
-- メモが `memo.txt` に自動保存・起動時に復元される
-- 電卓で基本四則演算ができる
-- WebタブにURLを入力してページが表示される
+- `npx ts-node scripts/verify.ts` が全項目 OK で終了する
+- `test-results/report.md` に FAIL が0件
+- `test-results/*.png` のスクリーンショットで各タブの表示が正常
 - アプリを再起動しても設定・メモ・最後のURLが復元される
-- .gitignoreの更新により必要なファイルのみがcommitされている
