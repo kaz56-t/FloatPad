@@ -26,7 +26,10 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
-  "dependencies": {
-    "@rollup/rollup-win32-x64-msvc": "^4.60.0"
+  "dependencies": {},
+  "optionalDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.60.0",
+    "@rollup/rollup-darwin-arm64": "^4.60.0",
+    "@rollup/rollup-darwin-x64": "^4.60.0"
   }
 }
