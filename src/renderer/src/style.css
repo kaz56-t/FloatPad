@@ -17,6 +17,17 @@
   --btn-hover: #3a3a3a;
 }
 
+html[data-theme="light"] {
+  --bg: #f0f0f0;
+  --surface: #e0e0e0;
+  --surface2: #d4d4d4;
+  --border: #c0c0c0;
+  --text: #1a1a1a;
+  --text-dim: #666;
+  --danger: #e53e3e;
+  --btn-hover: #d0d0d0;
+}
+
 html,
 body {
   width: 100%;
@@ -463,4 +474,57 @@ webview {
 .settings-reset-btn:hover {
   background: var(--btn-hover);
   color: var(--text);
+}
+
+/* ======= テーマ選択 ======= */
+.theme-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.theme-btn {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 6px 0;
+  font-size: 12px;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.theme-btn:hover {
+  background: var(--btn-hover);
+  color: var(--text);
+}
+
+.theme-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+/* ======= アクセントカラー ======= */
+.accent-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.accent-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.1s;
+  flex-shrink: 0;
+}
+
+.accent-swatch:hover {
+  transform: scale(1.15);
+}
+
+.accent-swatch.active {
+  border-color: var(--text);
 }

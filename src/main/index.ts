@@ -9,6 +9,11 @@ interface WindowBounds {
   height: number
 }
 
+interface MemoMeta {
+  id: number
+  name: string
+}
+
 interface Settings {
   alwaysOnTop: boolean
   windowBounds: WindowBounds
@@ -16,6 +21,10 @@ interface Settings {
   lastUrl: string
   opacity: number
   memoDir: string  // 空文字 = user-data/ を使用
+  theme: 'auto' | 'light' | 'dark'
+  accentColor: string
+  activeMemoId: number
+  showLineNumbers: boolean
 }
 
 const defaultSettings: Settings = {
@@ -24,7 +33,11 @@ const defaultSettings: Settings = {
   lastTab: 'memo',
   lastUrl: 'https://www.google.com',
   opacity: 100,
-  memoDir: ''
+  memoDir: '',
+  theme: 'auto',
+  accentColor: 'blue',
+  activeMemoId: 1,
+  showLineNumbers: false
 }
 
 // データ保存先：
@@ -41,9 +54,41 @@ function getSettingsPath(): string {
   return join(getDataDir(), 'settings.json')
 }
 
-function getMemoPath(): string {
-  const dir = currentSettings.memoDir
-  return dir ? join(dir, 'memo.txt') : join(getDataDir(), 'memo.txt')
+function getMemoBaseDir(): string {
+  return currentSettings.memoDir || getDataDir()
+}
+
+function getMemoListPath(): string {
+  return join(getMemoBaseDir(), 'memos.json')
+}
+
+function getMemoFilePath(id: number): string {
+  return join(getMemoBaseDir(), `memo-${id}.txt`)
+}
+
+async function loadMemoList(): Promise<MemoMeta[]> {
+  try {
+    const data = await fs.readFile(getMemoListPath(), 'utf-8')
+    return JSON.parse(data) as MemoMeta[]
+  } catch {
+    // 旧 memo.txt からの移行
+    const list: MemoMeta[] = [{ id: 1, name: 'メモ 1' }]
+    const oldPath = join(getMemoBaseDir(), 'memo.txt')
+    try {
+      const oldContent = await fs.readFile(oldPath, 'utf-8')
+      await fs.mkdir(getMemoBaseDir(), { recursive: true })
+      await fs.writeFile(getMemoFilePath(1), oldContent, 'utf-8')
+    } catch {
+      // 旧ファイルなし: そのまま空のメモ1を使う
+    }
+    await saveMemoList(list)
+    return list
+  }
+}
+
+async function saveMemoList(list: MemoMeta[]): Promise<void> {
+  await fs.mkdir(getDataDir(), { recursive: true })
+  await fs.writeFile(getMemoListPath(), JSON.stringify(list, null, 2), 'utf-8')
 }
 
 async function loadSettings(): Promise<Settings> {
@@ -108,25 +153,62 @@ async function createWindow(): Promise<void> {
   }
 }
 
+// IPC: メモ一覧取得
+ipcMain.handle('memo:list', async () => {
+  return await loadMemoList()
+})
+
 // IPC: メモ読み込み
-ipcMain.handle('memo:load', async () => {
+ipcMain.handle('memo:load', async (_, id: number) => {
   try {
-    return await fs.readFile(getMemoPath(), 'utf-8')
+    return await fs.readFile(getMemoFilePath(id), 'utf-8')
   } catch {
     return ''
   }
 })
 
 // IPC: メモ保存
-ipcMain.handle('memo:save', async (_, text: string) => {
+ipcMain.handle('memo:save', async (_, id: number, text: string) => {
   try {
-    await fs.mkdir(getDataDir(), { recursive: true })
-    await fs.writeFile(getMemoPath(), text, 'utf-8')
+    await fs.mkdir(getMemoBaseDir(), { recursive: true })
+    await fs.writeFile(getMemoFilePath(id), text, 'utf-8')
     return true
   } catch (err) {
     console.error('メモの保存に失敗しました:', err)
     return false
   }
+})
+
+// IPC: メモ新規作成
+ipcMain.handle('memo:create', async (_, name: string) => {
+  const list = await loadMemoList()
+  const maxId = list.reduce((max, m) => Math.max(max, m.id), 0)
+  const newMemo: MemoMeta = { id: maxId + 1, name }
+  list.push(newMemo)
+  await saveMemoList(list)
+  return newMemo
+})
+
+// IPC: メモ削除
+ipcMain.handle('memo:delete', async (_, id: number) => {
+  try {
+    await fs.unlink(getMemoFilePath(id))
+  } catch { /* ファイルなしは無視 */ }
+  const list = await loadMemoList()
+  await saveMemoList(list.filter((m) => m.id !== id))
+  return true
+})
+
+// IPC: メモ名変更
+ipcMain.handle('memo:rename', async (_, id: number, name: string) => {
+  const list = await loadMemoList()
+  const memo = list.find((m) => m.id === id)
+  if (memo) {
+    memo.name = name
+    await saveMemoList(list)
+    return true
+  }
+  return false
 })
 
 // IPC: 設定読み込み

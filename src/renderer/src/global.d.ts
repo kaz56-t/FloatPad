@@ -1,5 +1,10 @@
 export {}
 
+interface MemoMeta {
+  id: number
+  name: string
+}
+
 interface Settings {
   alwaysOnTop: boolean
   windowBounds: { x: number; y: number; width: number; height: number }
@@ -7,13 +12,21 @@ interface Settings {
   lastUrl: string
   opacity: number
   memoDir: string
+  theme: 'auto' | 'light' | 'dark'
+  accentColor: string
+  activeMemoId: number
+  showLineNumbers: boolean
 }
 
 declare global {
   interface Window {
     api: {
-      memoSave: (text: string) => Promise<boolean>
-      memoLoad: () => Promise<string>
+      memoList: () => Promise<MemoMeta[]>
+      memoSave: (id: number, text: string) => Promise<boolean>
+      memoLoad: (id: number) => Promise<string>
+      memoCreate: (name: string) => Promise<MemoMeta>
+      memoDelete: (id: number) => Promise<boolean>
+      memoRename: (id: number, name: string) => Promise<boolean>
       settingsSave: (data: object) => Promise<boolean>
       settingsLoad: () => Promise<Settings>
       windowSetOpacity: (opacity: number) => Promise<boolean>
