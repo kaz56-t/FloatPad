@@ -27,8 +27,13 @@ const defaultSettings: Settings = {
   memoDir: ''
 }
 
-// データはプロジェクトフォルダ内の user-data/ に保存
+// データ保存先：
+//   開発中 (npm run dev)  → プロジェクト内 user-data/  （確認しやすい）
+//   パッケージ済み        → %APPDATA%\floatpad\        （書き込み可能な標準パス）
 function getDataDir(): string {
+  if (app.isPackaged) {
+    return app.getPath('userData')
+  }
   return join(app.getAppPath(), 'user-data')
 }
 
