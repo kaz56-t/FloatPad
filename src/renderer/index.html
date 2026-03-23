@@ -12,7 +12,7 @@
       <div id="tabs">
         <button class="tab active" data-tab="memo">メモ</button>
         <button class="tab" data-tab="calculator">電卓</button>
-        <button class="tab" data-tab="webviewer">Web</button>
+        <button class="tab" data-tab="web">Web</button>
       </div>
       <button id="close-btn" title="閉じる">✕</button>
     </div>
@@ -31,7 +31,7 @@
       <div id="calc-history"></div>
       <div id="calc-display">
         <div id="calc-expression"></div>
-        <div id="calc-result" title="クリックでコピー">0</div>
+        <div id="calc-result" data-display title="クリックでコピー">0</div>
       </div>
       <div id="calc-buttons">
         <button class="calc-btn func" data-key="AC">AC</button>
@@ -61,12 +61,12 @@
     </div>
 
     <!-- Webビューアパネル -->
-    <div id="panel-webviewer" class="panel">
+    <div id="panel-web" class="panel">
       <div id="web-nav">
         <button id="web-back" title="戻る">◀</button>
         <button id="web-forward" title="進む">▶</button>
         <button id="web-reload" title="更新">⟳</button>
-        <input id="web-url" type="text" placeholder="URLまたは検索ワードを入力..." />
+        <input id="web-url" data-url-input type="text" placeholder="URLまたは検索ワードを入力..." />
       </div>
       <div id="web-content">
         <webview id="webview" src="about:blank"></webview>

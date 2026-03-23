@@ -25,12 +25,17 @@ const defaultSettings: Settings = {
   opacity: 100
 }
 
+// データはプロジェクトフォルダ内の user-data/ に保存
+function getDataDir(): string {
+  return join(app.getAppPath(), 'user-data')
+}
+
 function getSettingsPath(): string {
-  return join(app.getPath('userData'), 'settings.json')
+  return join(getDataDir(), 'settings.json')
 }
 
 function getMemoPath(): string {
-  return join(app.getPath('documents'), 'FloatPad', 'memo.txt')
+  return join(getDataDir(), 'memo.txt')
 }
 
 async function loadSettings(): Promise<Settings> {
@@ -44,8 +49,7 @@ async function loadSettings(): Promise<Settings> {
 
 async function saveSettings(data: Settings): Promise<void> {
   try {
-    const dir = join(getSettingsPath(), '..')
-    await fs.mkdir(dir, { recursive: true })
+    await fs.mkdir(getDataDir(), { recursive: true })
     await fs.writeFile(getSettingsPath(), JSON.stringify(data, null, 2), 'utf-8')
   } catch (err) {
     console.error('設定の保存に失敗しました:', err)
@@ -103,8 +107,7 @@ ipcMain.handle('memo:load', async () => {
 // IPC: メモ保存
 ipcMain.handle('memo:save', async (_, text: string) => {
   try {
-    const dir = join(getMemoPath(), '..')
-    await fs.mkdir(dir, { recursive: true })
+    await fs.mkdir(getDataDir(), { recursive: true })
     await fs.writeFile(getMemoPath(), text, 'utf-8')
     return true
   } catch (err) {
