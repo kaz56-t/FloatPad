@@ -208,6 +208,12 @@ async function run(): Promise<void> {
     results['Webビューア'] = `FAIL: ${e}`
   }
 
+  // テスト終了前にメモタブに戻す（lastTab を汚染しないため）
+  try {
+    await win.click('[data-tab="memo"]')
+    await win.waitForTimeout(300)
+  } catch { /* 無視 */ }
+
   await app.close()
 
   // --- 結果レポート出力 ---
