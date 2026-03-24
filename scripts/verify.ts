@@ -28,8 +28,8 @@ async function run(): Promise<void> {
     await win.waitForTimeout(500)
     await win.locator('#memo-input').fill('Playwright テスト 12345')
     await win.waitForTimeout(1500) // debounce 待機
-    const memoPath = path.join(process.cwd(), 'user-data', 'memo-1.txt')
-    const saved = await fs.readFile(memoPath, 'utf-8')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const saved = await win.evaluate(() => (window as any).api.memoLoad(1)) as string
     results['メモ自動保存'] = saved.includes('Playwright テスト 12345') ? 'OK' : `FAIL: 内容不一致`
     await win.screenshot({ path: `${RESULTS_DIR}/02_memo.png` })
   } catch (e) {
@@ -156,12 +156,16 @@ async function run(): Promise<void> {
     await win.fill('#snippets-text-input', 'Hello Snippet')
     await win.click('#snippets-save-btn')
     await win.waitForTimeout(300)
-    const snippetTitle = await win.locator('.snippet-item-title').first().textContent()
-    results['定型文追加'] = snippetTitle === 'テスト定型文' ? 'OK' : `FAIL: タイトル="${snippetTitle}"`
+    const titles = await win.locator('.snippet-item-title').allTextContents()
+    const found = titles.includes('テスト定型文')
+    results['定型文追加'] = found ? 'OK' : `FAIL: 一覧=${JSON.stringify(titles)}`
     await win.screenshot({ path: `${RESULTS_DIR}/06_snippets.png` })
     // クリーンアップ: 追加した定型文を削除
-    await win.locator('.snippet-delete-btn').first().click()
-    await win.waitForTimeout(200)
+    const idx = titles.indexOf('テスト定型文')
+    if (idx >= 0) {
+      await win.locator('.snippet-delete-btn').nth(idx).click()
+      await win.waitForTimeout(200)
+    }
   } catch (e) {
     results['定型文追加'] = `FAIL: ${e}`
   }

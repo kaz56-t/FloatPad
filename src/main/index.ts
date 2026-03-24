@@ -70,7 +70,15 @@ function getMemoListPath(): string {
   return join(getMemoBaseDir(), 'memos.json')
 }
 
-function getMemoFilePath(id: number): string {
+function sanitizeFilename(name: string): string {
+  return name.replace(/[/\\:*?"<>|]/g, '_').trim().replace(/\s+/g, '_').slice(0, 50)
+}
+
+function getMemoFilePath(id: number, name?: string): string {
+  if (name) {
+    const safe = sanitizeFilename(name)
+    if (safe) return join(getMemoBaseDir(), `${safe}-${id}.txt`)
+  }
   return join(getMemoBaseDir(), `memo-${id}.txt`)
 }
 
@@ -186,18 +194,27 @@ ipcMain.handle('memo:list', async () => {
 
 // IPC: メモ読み込み
 ipcMain.handle('memo:load', async (_, id: number) => {
+  const list = await loadMemoList()
+  const memo = list.find((m) => m.id === id)
   try {
-    return await fs.readFile(getMemoFilePath(id), 'utf-8')
+    return await fs.readFile(getMemoFilePath(id, memo?.name), 'utf-8')
   } catch {
-    return ''
+    // 旧形式 memo-{id}.txt へのフォールバック
+    try {
+      return await fs.readFile(join(getMemoBaseDir(), `memo-${id}.txt`), 'utf-8')
+    } catch {
+      return ''
+    }
   }
 })
 
 // IPC: メモ保存
 ipcMain.handle('memo:save', async (_, id: number, text: string) => {
+  const list = await loadMemoList()
+  const memo = list.find((m) => m.id === id)
   try {
     await fs.mkdir(getMemoBaseDir(), { recursive: true })
-    await fs.writeFile(getMemoFilePath(id), text, 'utf-8')
+    await fs.writeFile(getMemoFilePath(id, memo?.name), text, 'utf-8')
     return true
   } catch (err) {
     console.error('メモの保存に失敗しました:', err)
@@ -217,20 +234,32 @@ ipcMain.handle('memo:create', async (_, name: string) => {
 
 // IPC: メモ削除
 ipcMain.handle('memo:delete', async (_, id: number) => {
-  try {
-    await fs.unlink(getMemoFilePath(id))
-  } catch { /* ファイルなしは無視 */ }
   const list = await loadMemoList()
+  const memo = list.find((m) => m.id === id)
+  try { await fs.unlink(getMemoFilePath(id, memo?.name)) } catch { /* 無視 */ }
+  try { await fs.unlink(join(getMemoBaseDir(), `memo-${id}.txt`)) } catch { /* 無視 */ }
   await saveMemoList(list.filter((m) => m.id !== id))
   return true
 })
 
-// IPC: メモ名変更
+// IPC: メモ名変更（ファイル名も更新）
 ipcMain.handle('memo:rename', async (_, id: number, name: string) => {
   const list = await loadMemoList()
   const memo = list.find((m) => m.id === id)
   if (memo) {
+    const oldPath = getMemoFilePath(id, memo.name)
     memo.name = name
+    const newPath = getMemoFilePath(id, name)
+    if (oldPath !== newPath) {
+      try {
+        await fs.rename(oldPath, newPath)
+      } catch {
+        // 旧形式 memo-{id}.txt からの移行も試みる
+        try {
+          await fs.rename(join(getMemoBaseDir(), `memo-${id}.txt`), newPath)
+        } catch { /* ファイルがまだ存在しない場合は無視 */ }
+      }
+    }
     await saveMemoList(list)
     return true
   }
