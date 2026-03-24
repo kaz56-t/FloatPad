@@ -7,7 +7,12 @@ interface WebviewElement extends HTMLElement {
   goBack(): void
   goForward(): void
   reload(): void
+  setZoomFactor(factor: number): void
+  getZoomFactor(): number
 }
+
+const ZOOM_STEPS = [0.5, 0.67, 0.75, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0]
+const ZOOM_STEPS_REVERSED = [...ZOOM_STEPS].reverse()
 
 export function initWebViewer(): void {
   const webviewEl = document.getElementById('webview') as WebviewElement
@@ -17,6 +22,46 @@ export function initWebViewer(): void {
   const reloadBtn = document.getElementById('web-reload')!
   const spinner = document.getElementById('web-spinner')!
   const errorEl = document.getElementById('web-error')!
+  const zoomOutBtn = document.getElementById('web-zoom-out')!
+  const zoomInBtn = document.getElementById('web-zoom-in')!
+  const zoomLevelBtn = document.getElementById('web-zoom-level')!
+  const panelWeb = document.getElementById('panel-web')!
+
+  function updateZoomUI(factor: number): void {
+    zoomLevelBtn.textContent = Math.round(factor * 100) + '%'
+    zoomOutBtn.toggleAttribute('disabled', factor <= ZOOM_STEPS[0])
+    zoomInBtn.toggleAttribute('disabled', factor >= ZOOM_STEPS[ZOOM_STEPS.length - 1])
+  }
+
+  function setZoom(factor: number): void {
+    webviewEl.setZoomFactor(factor)
+    updateZoomUI(factor)
+  }
+
+  function zoomIn(): void {
+    const current = webviewEl.getZoomFactor()
+    const next = ZOOM_STEPS.find((s) => s > current + 0.01)
+    if (next !== undefined) setZoom(next)
+  }
+
+  function zoomOut(): void {
+    const current = webviewEl.getZoomFactor()
+    const prev = ZOOM_STEPS_REVERSED.find((s) => s < current - 0.01)
+    if (prev !== undefined) setZoom(prev)
+  }
+
+  zoomInBtn.addEventListener('click', zoomIn)
+  zoomOutBtn.addEventListener('click', zoomOut)
+  zoomLevelBtn.addEventListener('click', () => setZoom(1.0))
+
+  // Ctrl+= / Ctrl+- / Ctrl+0 キーボードショートカット
+  document.addEventListener('keydown', (e) => {
+    if (!panelWeb.classList.contains('active')) return
+    if (!e.ctrlKey && !e.metaKey) return
+    if (e.key === '=' || e.key === '+') { e.preventDefault(); zoomIn() }
+    else if (e.key === '-') { e.preventDefault(); zoomOut() }
+    else if (e.key === '0') { e.preventDefault(); setZoom(1.0) }
+  })
 
   function navigate(rawUrl: string): void {
     let url = rawUrl.trim()
@@ -66,6 +111,7 @@ export function initWebViewer(): void {
     if (currentUrl && currentUrl !== 'about:blank') {
       urlInput.value = currentUrl
     }
+    updateZoomUI(webviewEl.getZoomFactor())
   })
 
   webviewEl.addEventListener('did-fail-load', (e) => {

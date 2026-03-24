@@ -529,6 +529,34 @@ body {
   color: var(--text);
 }
 
+#web-zoom {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+#web-zoom-level {
+  font-size: 11px !important;
+  padding: 4px 4px !important;
+  min-width: 38px;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+#web-zoom-out,
+#web-zoom-in {
+  font-size: 14px !important;
+  padding: 2px 6px !important;
+  line-height: 1;
+}
+
+#web-zoom button:disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
 #web-url {
   flex: 1;
   background: var(--bg);
