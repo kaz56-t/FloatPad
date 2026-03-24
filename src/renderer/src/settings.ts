@@ -40,6 +40,8 @@ export function initSettings(): void {
   const resetBtn = document.getElementById('settings-reset') as HTMLButtonElement
   const themeBtns = document.querySelectorAll<HTMLButtonElement>('.theme-btn')
   const accentSwatches = document.querySelectorAll<HTMLButtonElement>('.accent-swatch')
+  const hotkeyInput = document.getElementById('hotkey-input') as HTMLInputElement
+  const hotkeyApplyBtn = document.getElementById('hotkey-apply-btn') as HTMLButtonElement
 
   // 現在の設定を反映
   window.api.settingsLoad().then((settings) => {
@@ -53,6 +55,7 @@ export function initSettings(): void {
     applyFontSize(fs)
     setActiveTheme(settings.theme ?? 'auto')
     setActiveAccent(settings.accentColor ?? 'blue')
+    hotkeyInput.value = settings.hotkey || 'Ctrl+Shift+Space'
   }).catch(console.error)
 
   // テーマボタンのアクティブ状態を更新
@@ -125,6 +128,17 @@ export function initSettings(): void {
     await window.api.settingsSave({ ...settings, fontSize: size })
   })
 
+  // グローバルホットキー適用
+  hotkeyApplyBtn.addEventListener('click', async () => {
+    const accelerator = hotkeyInput.value.trim()
+    if (!accelerator) return
+    const ok = await window.api.globalShortcutUpdate(accelerator)
+    if (!ok) {
+      hotkeyInput.style.borderColor = 'var(--danger)'
+      setTimeout(() => { hotkeyInput.style.borderColor = '' }, 1500)
+    }
+  })
+
   // デフォルトに戻す
   resetBtn.addEventListener('click', async () => {
     memoDirInput.value = ''
@@ -136,8 +150,10 @@ export function initSettings(): void {
     setActiveTheme('auto')
     setActiveAccent('blue')
     applyTheme('auto', 'blue')
+    hotkeyInput.value = 'Ctrl+Shift+Space'
     const settings = await window.api.settingsLoad()
-    await window.api.settingsSave({ ...settings, memoDir: '', opacity: 100, theme: 'auto', accentColor: 'blue', fontSize: 14 })
+    await window.api.settingsSave({ ...settings, memoDir: '', opacity: 100, theme: 'auto', accentColor: 'blue', fontSize: 14, hotkey: 'Ctrl+Shift+Space' })
     await window.api.windowSetOpacity(100)
+    await window.api.globalShortcutUpdate('Ctrl+Shift+Space')
   })
 }

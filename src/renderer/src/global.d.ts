@@ -5,6 +5,12 @@ declare global {
     id: number
     name: string
   }
+
+  interface SnippetItem {
+    id: number
+    title: string
+    text: string
+  }
 }
 
 interface Settings {
@@ -19,6 +25,7 @@ interface Settings {
   activeMemoId: number
   showLineNumbers: boolean
   fontSize: number
+  hotkey: string
 }
 
 declare global {
@@ -33,7 +40,11 @@ declare global {
       settingsSave: (data: object) => Promise<boolean>
       settingsLoad: () => Promise<Settings>
       windowSetOpacity: (opacity: number) => Promise<boolean>
+      windowSetMini: (mini: boolean) => Promise<boolean>
       chooseFolder: () => Promise<string | null>
+      globalShortcutUpdate: (accelerator: string) => Promise<boolean>
+      snippetsLoad: () => Promise<SnippetItem[]>
+      snippetsSave: (data: SnippetItem[]) => Promise<boolean>
     }
   }
 }

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut } from 'electron'
 import { join } from 'path'
 import { promises as fs } from 'fs'
 
@@ -14,6 +14,12 @@ interface MemoMeta {
   name: string
 }
 
+interface SnippetItem {
+  id: number
+  title: string
+  text: string
+}
+
 interface Settings {
   alwaysOnTop: boolean
   windowBounds: WindowBounds
@@ -25,6 +31,7 @@ interface Settings {
   accentColor: string
   activeMemoId: number
   showLineNumbers: boolean
+  hotkey: string
 }
 
 const defaultSettings: Settings = {
@@ -37,7 +44,8 @@ const defaultSettings: Settings = {
   theme: 'auto',
   accentColor: 'blue',
   activeMemoId: 1,
-  showLineNumbers: false
+  showLineNumbers: false,
+  hotkey: 'Ctrl+Shift+Space'
 }
 
 // データ保存先：
@@ -110,6 +118,8 @@ async function saveSettings(data: Settings): Promise<void> {
 }
 
 let currentSettings: Settings = { ...defaultSettings }
+// ミニモード用: 折りたたむ前の高さを記録
+let savedWindowHeight = 560
 
 async function createWindow(): Promise<void> {
   currentSettings = await loadSettings()
@@ -122,7 +132,6 @@ async function createWindow(): Promise<void> {
     height,
     minWidth: 320,
     minHeight: 400,
-    alwaysOnTop: true,
     frame: false,
     resizable: true,
     webPreferences: {
@@ -137,6 +146,20 @@ async function createWindow(): Promise<void> {
   if (currentSettings.opacity < 100) {
     win.setOpacity(currentSettings.opacity / 100)
   }
+
+  // グローバルホットキー登録
+  function registerHotkey(accelerator: string): void {
+    globalShortcut.unregisterAll()
+    const ok = globalShortcut.register(accelerator, () => {
+      if (win.isMinimized()) win.restore()
+      win.show()
+      win.focus()
+    })
+    if (!ok) {
+      console.error('グローバルホットキーの登録に失敗しました:', accelerator)
+    }
+  }
+  registerHotkey(currentSettings.hotkey || 'Ctrl+Shift+Space')
 
   // ウィンドウ閉時に位置・サイズを保存
   win.on('close', () => {
@@ -247,6 +270,68 @@ ipcMain.handle('dialog:chooseFolder', async (event) => {
   return null
 })
 
+// IPC: グローバルホットキー更新
+ipcMain.handle('globalShortcut:update', async (_, accelerator: string) => {
+  try {
+    globalShortcut.unregisterAll()
+    const wins = BrowserWindow.getAllWindows()
+    if (wins.length === 0) return false
+    const win = wins[0]
+    const ok = globalShortcut.register(accelerator, () => {
+      if (win.isMinimized()) win.restore()
+      win.show()
+      win.focus()
+    })
+    if (ok) {
+      currentSettings.hotkey = accelerator
+      await saveSettings(currentSettings)
+    }
+    return ok
+  } catch (err) {
+    console.error('ホットキー更新エラー:', err)
+    return false
+  }
+})
+
+// IPC: ミニモード切り替え
+ipcMain.handle('window:setMini', async (event, mini: boolean) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (!win) return false
+  if (mini) {
+    savedWindowHeight = win.getBounds().height
+    win.setMinimumSize(320, 34)
+    win.setSize(win.getBounds().width, 34)
+  } else {
+    win.setMinimumSize(320, 400)
+    win.setSize(win.getBounds().width, savedWindowHeight)
+  }
+  return true
+})
+
+// IPC: 定型文読み込み
+ipcMain.handle('snippets:load', async () => {
+  try {
+    const filePath = join(getDataDir(), 'snippets.json')
+    const data = await fs.readFile(filePath, 'utf-8')
+    return JSON.parse(data) as SnippetItem[]
+  } catch {
+    return []
+  }
+})
+
+// IPC: 定型文保存
+ipcMain.handle('snippets:save', async (_, data: SnippetItem[]) => {
+  try {
+    await fs.mkdir(getDataDir(), { recursive: true })
+    const filePath = join(getDataDir(), 'snippets.json')
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8')
+    return true
+  } catch (err) {
+    console.error('定型文の保存に失敗しました:', err)
+    return false
+  }
+})
+
 // target="_blank" リンクをシステムブラウザで開く
 app.on('web-contents-created', (_, contents) => {
   contents.setWindowOpenHandler(({ url }) => {
@@ -259,4 +344,8 @@ app.whenReady().then(createWindow)
 
 app.on('window-all-closed', () => {
   app.quit()
+})
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
 })

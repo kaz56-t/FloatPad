@@ -720,3 +720,179 @@ webview {
 .accent-swatch.active {
   border-color: var(--text);
 }
+
+/* ======= ミニモード ======= */
+body.mini .panel,
+body.mini #memo-title,
+body.mini #memo-status {
+  display: none !important;
+}
+
+/* ======= 定型文パネル ======= */
+#panel-snippets {
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#snippets-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.snippet-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--surface);
+  border-radius: 6px;
+  min-height: 36px;
+}
+
+.snippet-item-title {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.snippet-copy-btn,
+.snippet-delete-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 8px;
+  transition: background 0.1s, color 0.1s;
+  flex-shrink: 0;
+}
+
+.snippet-copy-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.snippet-delete-btn:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: white;
+}
+
+#snippets-add-form {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+#snippets-add-form.hidden {
+  display: none !important;
+}
+
+#snippets-title-input,
+#snippets-text-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  padding: 6px 8px;
+  outline: none;
+  user-select: text;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#snippets-title-input:focus,
+#snippets-text-input:focus {
+  border-color: var(--accent);
+}
+
+#snippets-text-input {
+  resize: none;
+  min-height: 60px;
+}
+
+#snippets-form-btns {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+#snippets-save-btn,
+#snippets-cancel-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 12px;
+  transition: background 0.1s;
+}
+
+#snippets-save-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+#snippets-cancel-btn:hover {
+  background: var(--btn-hover);
+}
+
+#snippets-footer {
+  padding: 6px 8px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+#snippets-add-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 5px 12px;
+  transition: background 0.1s, color 0.1s;
+  width: 100%;
+}
+
+#snippets-add-btn:hover {
+  background: var(--btn-hover);
+  color: var(--text);
+}
+
+/* ======= ホットキー設定 ======= */
+#hotkey-apply-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 6px 12px;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: background 0.1s;
+}
+
+#hotkey-apply-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}

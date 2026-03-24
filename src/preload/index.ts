@@ -10,5 +10,9 @@ contextBridge.exposeInMainWorld('api', {
   settingsSave: (data: object) => ipcRenderer.invoke('settings:save', data),
   settingsLoad: () => ipcRenderer.invoke('settings:load'),
   windowSetOpacity: (opacity: number) => ipcRenderer.invoke('window:setOpacity', opacity),
-  chooseFolder: () => ipcRenderer.invoke('dialog:chooseFolder')
+  windowSetMini: (mini: boolean) => ipcRenderer.invoke('window:setMini', mini),
+  chooseFolder: () => ipcRenderer.invoke('dialog:chooseFolder'),
+  globalShortcutUpdate: (accelerator: string) => ipcRenderer.invoke('globalShortcut:update', accelerator),
+  snippetsLoad: () => ipcRenderer.invoke('snippets:load'),
+  snippetsSave: (data: object[]) => ipcRenderer.invoke('snippets:save', data)
 })

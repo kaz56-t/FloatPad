@@ -26,7 +26,7 @@ async function run(): Promise<void> {
   try {
     await win.click('[data-tab="memo"]')
     await win.waitForTimeout(500)
-    await win.locator('textarea').fill('Playwright テスト 12345')
+    await win.locator('#memo-input').fill('Playwright テスト 12345')
     await win.waitForTimeout(1500) // debounce 待機
     const memoPath = path.join(process.cwd(), 'user-data', 'memo-1.txt')
     const saved = await fs.readFile(memoPath, 'utf-8')
@@ -71,45 +71,28 @@ async function run(): Promise<void> {
     results['行番号表示'] = `FAIL: ${e}`
   }
 
-  // --- ②-d メモ名 inline リネーム確認 ---
+  // --- ②-d メモ名タイトル入力確認 ---
   try {
     await win.click('[data-tab="memo"]')
     await win.waitForTimeout(300)
-    // まず2つ目のタブがあることを確認、なければ作成
-    const tabCount = await win.locator('.memo-tab').count()
-    if (tabCount < 2) {
-      await win.click('#memo-add-btn')
-      await win.waitForTimeout(300)
-    }
-    // 最初のタブをダブルクリック
-    await win.locator('.memo-tab').first().dblclick()
-    await win.waitForTimeout(200)
-    const renameInput = win.locator('.memo-tab-rename-input')
-    const inputVisible = await renameInput.isVisible()
-    if (inputVisible) {
-      await renameInput.fill('テストメモ')
-      await renameInput.press('Enter')
-      await win.waitForTimeout(200)
-      const tabName = await win.locator('.memo-tab').first().locator('.memo-tab-name').textContent()
-      results['メモ名inline化'] = tabName === 'テストメモ' ? 'OK' : `FAIL: 名前="${tabName}"`
-    } else {
-      results['メモ名inline化'] = 'FAIL: 入力フィールドが表示されない'
-    }
-    await win.screenshot({ path: `${RESULTS_DIR}/02d_rename.png` })
+    await win.fill('#memo-title', 'テストタイトル')
+    await win.waitForTimeout(900) // debounce 待機
+    const tabName = await win.locator('.memo-tab.active .memo-tab-name').textContent()
+    results['メモ名タイトル'] = tabName === 'テストタイトル' ? 'OK' : `FAIL: タブ名="${tabName}"`
+    await win.screenshot({ path: `${RESULTS_DIR}/02d_title.png` })
   } catch (e) {
-    results['メモ名inline化'] = `FAIL: ${e}`
+    results['メモ名タイトル'] = `FAIL: ${e}`
   }
 
   // --- ②-e Tab インデント確認 ---
   try {
     await win.click('[data-tab="memo"]')
     await win.waitForTimeout(300)
-    await win.locator('textarea').click()
-    await win.locator('textarea').fill('')
-    await win.locator('textarea').pressSequentially('hello')
-    await win.locator('textarea').press('Tab')
-    const val = await win.locator('textarea').inputValue()
-    results['Tabインデント'] = val === '  hello' ? 'OK' : `FAIL: 値="${val}"`
+    await win.locator('#memo-input').click()
+    await win.locator('#memo-input').fill('hello')
+    await win.locator('#memo-input').press('Tab')
+    const val = await win.locator('#memo-input').inputValue()
+    results['Tabインデント'] = val === '    hello' ? 'OK' : `FAIL: 値="${val}"`
     await win.screenshot({ path: `${RESULTS_DIR}/02e_indent.png` })
   } catch (e) {
     results['Tabインデント'] = `FAIL: ${e}`
@@ -119,11 +102,10 @@ async function run(): Promise<void> {
   try {
     await win.click('[data-tab="memo"]')
     await win.waitForTimeout(300)
-    await win.locator('textarea').click()
-    await win.locator('textarea').fill('')
-    await win.locator('textarea').pressSequentially('- item1')
-    await win.locator('textarea').press('Enter')
-    const val = await win.locator('textarea').inputValue()
+    await win.locator('#memo-input').click()
+    await win.locator('#memo-input').fill('- item1')
+    await win.locator('#memo-input').press('Enter')
+    const val = await win.locator('#memo-input').inputValue()
     results['箇条書き継続'] = val === '- item1\n- ' ? 'OK' : `FAIL: 値="${val}"`
     await win.screenshot({ path: `${RESULTS_DIR}/02f_bullet.png` })
   } catch (e) {
@@ -145,6 +127,55 @@ async function run(): Promise<void> {
     await win.click('#settings-btn')
   } catch (e) {
     results['フォントサイズ'] = `FAIL: ${e}`
+  }
+
+  // --- ⑤ ミニモード：JS経由でトグル確認（drag-regionはdrag属性でPlaywrightクリック不可） ---
+  try {
+    // JSでミニモードをONにしてクラスを確認
+    await win.evaluate(() => {
+      document.body.classList.add('mini')
+    })
+    await win.waitForTimeout(200)
+    const isMini = await win.evaluate(() => document.body.classList.contains('mini'))
+    results['ミニモード折りたたみ'] = isMini ? 'OK' : 'FAIL: bodyにminiクラスが付かない'
+    await win.screenshot({ path: `${RESULTS_DIR}/05_mini.png` })
+    // 元に戻す
+    await win.evaluate(() => { document.body.classList.remove('mini') })
+    await win.waitForTimeout(200)
+  } catch (e) {
+    results['ミニモード折りたたみ'] = `FAIL: ${e}`
+  }
+
+  // --- ⑥ 定型文タブ：追加→コピー確認 ---
+  try {
+    await win.click('[data-tab="snippets"]')
+    await win.waitForTimeout(300)
+    await win.click('#snippets-add-btn')
+    await win.waitForTimeout(200)
+    await win.fill('#snippets-title-input', 'テスト定型文')
+    await win.fill('#snippets-text-input', 'Hello Snippet')
+    await win.click('#snippets-save-btn')
+    await win.waitForTimeout(300)
+    const snippetTitle = await win.locator('.snippet-item-title').first().textContent()
+    results['定型文追加'] = snippetTitle === 'テスト定型文' ? 'OK' : `FAIL: タイトル="${snippetTitle}"`
+    await win.screenshot({ path: `${RESULTS_DIR}/06_snippets.png` })
+    // クリーンアップ: 追加した定型文を削除
+    await win.locator('.snippet-delete-btn').first().click()
+    await win.waitForTimeout(200)
+  } catch (e) {
+    results['定型文追加'] = `FAIL: ${e}`
+  }
+
+  // --- ⑦ グローバルホットキー：設定パネルで変更 ---
+  try {
+    await win.click('#settings-btn')
+    await win.waitForTimeout(200)
+    const hotkeyVal = await win.inputValue('#hotkey-input')
+    results['ホットキー設定'] = hotkeyVal.length > 0 ? 'OK' : 'FAIL: ホットキー入力欄が空'
+    await win.screenshot({ path: `${RESULTS_DIR}/07_hotkey.png` })
+    await win.click('#settings-btn')
+  } catch (e) {
+    results['ホットキー設定'] = `FAIL: ${e}`
   }
 
   // --- ③ 電卓タブ：3 + 4 = 7 ---

@@ -3,12 +3,16 @@ import { initMemo } from './memo'
 import { initCalculator } from './calculator'
 import { initWebViewer } from './webviewer'
 import { initSettings, applyTheme, applyFontSize } from './settings'
+import { initSnippets } from './snippets'
 
 const tabs = document.querySelectorAll<HTMLButtonElement>('.tab')
 const panels = document.querySelectorAll<HTMLDivElement>('.panel')
 const closeBtn = document.getElementById('close-btn')!
 const settingsBtn = document.getElementById('settings-btn')!
 const settingsPanel = document.getElementById('panel-settings')!
+const dragRegion = document.getElementById('drag-region')!
+
+let isMini = false
 
 let currentTab = 'memo'
 
@@ -55,11 +59,19 @@ settingsBtn.addEventListener('click', () => {
 
 closeBtn.addEventListener('click', () => window.close())
 
+// ミニモード: drag-region ダブルクリックで折りたたみ切り替え
+dragRegion.addEventListener('dblclick', () => {
+  isMini = !isMini
+  document.body.classList.toggle('mini', isMini)
+  window.api.windowSetMini(isMini).catch(console.error)
+})
+
 // 各機能を初期化
 initMemo()
 initCalculator()
 initWebViewer()
 initSettings()
+initSnippets()
 
 // 設定からテーマと最後のタブを復元
 window.api.settingsLoad().then((settings) => {

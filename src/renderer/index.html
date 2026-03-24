@@ -13,6 +13,7 @@
         <button class="tab active" data-tab="memo">Memo</button>
         <button class="tab" data-tab="calculator">Calc</button>
         <button class="tab" data-tab="web">Web</button>
+        <button class="tab" data-tab="snippets">Snip</button>
       </div>
       <!-- ドラッグ可能な空白領域 -->
       <div id="drag-region"></div>
@@ -88,6 +89,22 @@
       </div>
     </div>
 
+    <!-- 定型文パネル -->
+    <div id="panel-snippets" class="panel">
+      <div id="snippets-list"></div>
+      <div id="snippets-add-form" class="hidden">
+        <input id="snippets-title-input" type="text" placeholder="タイトル" />
+        <textarea id="snippets-text-input" placeholder="定型文テキスト..."></textarea>
+        <div id="snippets-form-btns">
+          <button id="snippets-save-btn">保存</button>
+          <button id="snippets-cancel-btn">キャンセル</button>
+        </div>
+      </div>
+      <div id="snippets-footer">
+        <button id="snippets-add-btn">＋ 追加</button>
+      </div>
+    </div>
+
     <!-- 設定パネル -->
     <div id="panel-settings" class="panel">
       <div class="settings-body">
@@ -139,6 +156,15 @@
             <input id="opacity-slider" type="range" min="30" max="100" step="5" value="100" />
             <span id="opacity-value">100%</span>
           </div>
+        </section>
+
+        <section class="settings-section">
+          <h2>グローバルホットキー</h2>
+          <div class="settings-row">
+            <input id="hotkey-input" type="text" placeholder="例: Ctrl+Shift+Space" />
+            <button id="hotkey-apply-btn">適用</button>
+          </div>
+          <p class="settings-hint">FloatPad をフォアグラウンドに表示するホットキー</p>
         </section>
 
         <section class="settings-section">
