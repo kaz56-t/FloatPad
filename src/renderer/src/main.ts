@@ -10,7 +10,7 @@ const panels = document.querySelectorAll<HTMLDivElement>('.panel')
 const closeBtn = document.getElementById('close-btn')!
 const settingsBtn = document.getElementById('settings-btn')!
 const settingsPanel = document.getElementById('panel-settings')!
-const dragRegion = document.getElementById('drag-region')!
+const miniBtn = document.getElementById('mini-btn')!
 
 let isMini = false
 
@@ -59,10 +59,12 @@ settingsBtn.addEventListener('click', () => {
 
 closeBtn.addEventListener('click', () => window.close())
 
-// ミニモード: drag-region ダブルクリックで折りたたみ切り替え
-dragRegion.addEventListener('dblclick', () => {
+// ミニモード: ボタンクリックで折りたたみ切り替え
+miniBtn.addEventListener('click', () => {
   isMini = !isMini
   document.body.classList.toggle('mini', isMini)
+  miniBtn.title = isMini ? '展開' : '折りたたみ'
+  miniBtn.textContent = isMini ? '▼' : '▲'
   window.api.windowSetMini(isMini).catch(console.error)
 })
 

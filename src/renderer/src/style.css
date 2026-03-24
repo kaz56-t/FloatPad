@@ -109,6 +109,24 @@ body {
   color: white;
 }
 
+#mini-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0 6px;
+  height: 100%;
+  -webkit-app-region: no-drag;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+#mini-btn:hover {
+  background: var(--btn-hover);
+  color: var(--text);
+}
+
 #settings-btn {
   background: transparent;
   border: none;
