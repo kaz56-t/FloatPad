@@ -18,6 +18,7 @@ interface Settings {
   accentColor: string
   activeMemoId: number
   showLineNumbers: boolean
+  fontSize: number
 }
 
 declare global {

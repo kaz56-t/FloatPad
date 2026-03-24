@@ -49,18 +49,102 @@ async function run(): Promise<void> {
     results['複数メモ作成'] = `FAIL: ${e}`
   }
 
-  // --- ②-c 行番号：トグル確認 ---
+  // --- ②-c 行番号：設定パネルのチェックボックスでトグル確認 ---
   try {
     await win.click('[data-tab="memo"]')
-    await win.waitForTimeout(300)
-    await win.click('#line-num-toggle')
+    await win.waitForTimeout(200)
+    await win.click('#settings-btn')
+    await win.waitForTimeout(200)
+    await win.check('#line-num-toggle-settings')
+    await win.waitForTimeout(200)
+    await win.click('#settings-btn') // 設定を閉じる
     await win.waitForTimeout(200)
     const visible = await win.locator('#line-numbers').isVisible()
     results['行番号表示'] = visible ? 'OK' : 'FAIL: 行番号が表示されない'
     await win.screenshot({ path: `${RESULTS_DIR}/02c_line_numbers.png` })
-    await win.click('#line-num-toggle') // 元に戻す
+    // 元に戻す
+    await win.click('#settings-btn')
+    await win.waitForTimeout(200)
+    await win.uncheck('#line-num-toggle-settings')
+    await win.click('#settings-btn')
   } catch (e) {
     results['行番号表示'] = `FAIL: ${e}`
+  }
+
+  // --- ②-d メモ名 inline リネーム確認 ---
+  try {
+    await win.click('[data-tab="memo"]')
+    await win.waitForTimeout(300)
+    // まず2つ目のタブがあることを確認、なければ作成
+    const tabCount = await win.locator('.memo-tab').count()
+    if (tabCount < 2) {
+      await win.click('#memo-add-btn')
+      await win.waitForTimeout(300)
+    }
+    // 最初のタブをダブルクリック
+    await win.locator('.memo-tab').first().dblclick()
+    await win.waitForTimeout(200)
+    const renameInput = win.locator('.memo-tab-rename-input')
+    const inputVisible = await renameInput.isVisible()
+    if (inputVisible) {
+      await renameInput.fill('テストメモ')
+      await renameInput.press('Enter')
+      await win.waitForTimeout(200)
+      const tabName = await win.locator('.memo-tab').first().locator('.memo-tab-name').textContent()
+      results['メモ名inline化'] = tabName === 'テストメモ' ? 'OK' : `FAIL: 名前="${tabName}"`
+    } else {
+      results['メモ名inline化'] = 'FAIL: 入力フィールドが表示されない'
+    }
+    await win.screenshot({ path: `${RESULTS_DIR}/02d_rename.png` })
+  } catch (e) {
+    results['メモ名inline化'] = `FAIL: ${e}`
+  }
+
+  // --- ②-e Tab インデント確認 ---
+  try {
+    await win.click('[data-tab="memo"]')
+    await win.waitForTimeout(300)
+    await win.locator('textarea').click()
+    await win.locator('textarea').fill('')
+    await win.locator('textarea').pressSequentially('hello')
+    await win.locator('textarea').press('Tab')
+    const val = await win.locator('textarea').inputValue()
+    results['Tabインデント'] = val === '  hello' ? 'OK' : `FAIL: 値="${val}"`
+    await win.screenshot({ path: `${RESULTS_DIR}/02e_indent.png` })
+  } catch (e) {
+    results['Tabインデント'] = `FAIL: ${e}`
+  }
+
+  // --- ②-f 箇条書き継続確認 ---
+  try {
+    await win.click('[data-tab="memo"]')
+    await win.waitForTimeout(300)
+    await win.locator('textarea').click()
+    await win.locator('textarea').fill('')
+    await win.locator('textarea').pressSequentially('- item1')
+    await win.locator('textarea').press('Enter')
+    const val = await win.locator('textarea').inputValue()
+    results['箇条書き継続'] = val === '- item1\n- ' ? 'OK' : `FAIL: 値="${val}"`
+    await win.screenshot({ path: `${RESULTS_DIR}/02f_bullet.png` })
+  } catch (e) {
+    results['箇条書き継続'] = `FAIL: ${e}`
+  }
+
+  // --- ②-g フォントサイズ変更確認 ---
+  try {
+    await win.click('#settings-btn')
+    await win.waitForTimeout(200)
+    await win.locator('#font-size-slider').fill('18')
+    await win.locator('#font-size-slider').dispatchEvent('input')
+    await win.waitForTimeout(200)
+    const fontSize = await win.evaluate(() =>
+      getComputedStyle(document.getElementById('memo-input')!).fontSize
+    )
+    results['フォントサイズ'] = fontSize === '18px' ? 'OK' : `FAIL: fontSize="${fontSize}"`
+    await win.screenshot({ path: `${RESULTS_DIR}/02g_fontsize.png` })
+    await win.click('#settings-btn')
+  } catch (e) {
+    results['フォントサイズ'] = `FAIL: ${e}`
   }
 
   // --- ③ 電卓タブ：3 + 4 = 7 ---

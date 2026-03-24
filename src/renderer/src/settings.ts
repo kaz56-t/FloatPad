@@ -26,11 +26,17 @@ export function applyTheme(theme: string, accentColor: string): void {
   html.style.setProperty('--accent-hover', colors.hover)
 }
 
+export function applyFontSize(size: number): void {
+  document.documentElement.style.setProperty('--memo-font-size', `${size}px`)
+}
+
 export function initSettings(): void {
   const memoDirInput = document.getElementById('memo-dir-input') as HTMLInputElement
   const memoDirBrowse = document.getElementById('memo-dir-browse') as HTMLButtonElement
   const opacitySlider = document.getElementById('opacity-slider') as HTMLInputElement
   const opacityValue = document.getElementById('opacity-value')!
+  const fontSizeSlider = document.getElementById('font-size-slider') as HTMLInputElement
+  const fontSizeValue = document.getElementById('font-size-value')!
   const resetBtn = document.getElementById('settings-reset') as HTMLButtonElement
   const themeBtns = document.querySelectorAll<HTMLButtonElement>('.theme-btn')
   const accentSwatches = document.querySelectorAll<HTMLButtonElement>('.accent-swatch')
@@ -41,6 +47,10 @@ export function initSettings(): void {
     const op = settings.opacity ?? 100
     opacitySlider.value = String(op)
     opacityValue.textContent = `${op}%`
+    const fs = settings.fontSize ?? 14
+    fontSizeSlider.value = String(fs)
+    fontSizeValue.textContent = `${fs}px`
+    applyFontSize(fs)
     setActiveTheme(settings.theme ?? 'auto')
     setActiveAccent(settings.accentColor ?? 'blue')
   }).catch(console.error)
@@ -106,16 +116,28 @@ export function initSettings(): void {
     window.api.windowSetOpacity(value).catch(console.error)
   })
 
+  // フォントサイズスライダー
+  fontSizeSlider.addEventListener('input', async () => {
+    const size = parseInt(fontSizeSlider.value)
+    fontSizeValue.textContent = `${size}px`
+    applyFontSize(size)
+    const settings = await window.api.settingsLoad()
+    await window.api.settingsSave({ ...settings, fontSize: size })
+  })
+
   // デフォルトに戻す
   resetBtn.addEventListener('click', async () => {
     memoDirInput.value = ''
     opacitySlider.value = '100'
     opacityValue.textContent = '100%'
+    fontSizeSlider.value = '14'
+    fontSizeValue.textContent = '14px'
+    applyFontSize(14)
     setActiveTheme('auto')
     setActiveAccent('blue')
     applyTheme('auto', 'blue')
     const settings = await window.api.settingsLoad()
-    await window.api.settingsSave({ ...settings, memoDir: '', opacity: 100, theme: 'auto', accentColor: 'blue' })
+    await window.api.settingsSave({ ...settings, memoDir: '', opacity: 100, theme: 'auto', accentColor: 'blue', fontSize: 14 })
     await window.api.windowSetOpacity(100)
   })
 }

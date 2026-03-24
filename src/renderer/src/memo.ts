@@ -1,10 +1,12 @@
 export function initMemo(): void {
   const textarea = document.getElementById('memo-input') as HTMLTextAreaElement
+  const titleInput = document.getElementById('memo-title') as HTMLInputElement
   const charCount = document.getElementById('char-count')!
   const saveStatus = document.getElementById('save-status')!
   const tabbar = document.getElementById('memo-tabbar')!
   const addBtn = document.getElementById('memo-add-btn')!
   const lineNumToggle = document.getElementById('line-num-toggle')!
+  const lineNumToggleSettings = document.getElementById('line-num-toggle-settings') as HTMLInputElement | null
   const lineNumbers = document.getElementById('line-numbers')!
 
   let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -48,6 +50,7 @@ export function initMemo(): void {
   function setLineNumbers(enabled: boolean): void {
     showLineNumbers = enabled
     lineNumToggle.classList.toggle('active', enabled)
+    if (lineNumToggleSettings) lineNumToggleSettings.checked = enabled
     lineNumbers.classList.toggle('hidden', !enabled)
     if (enabled) updateLineNumbers()
     window.api.settingsLoad()
@@ -56,6 +59,7 @@ export function initMemo(): void {
   }
 
   lineNumToggle.addEventListener('click', () => setLineNumbers(!showLineNumbers))
+  lineNumToggleSettings?.addEventListener('change', () => setLineNumbers(lineNumToggleSettings.checked))
 
   textarea.addEventListener('scroll', () => {
     if (showLineNumbers) lineNumbers.scrollTop = textarea.scrollTop
@@ -89,10 +93,6 @@ export function initMemo(): void {
       }
 
       tab.addEventListener('click', () => switchMemo(memo.id))
-      tab.addEventListener('dblclick', (e) => {
-        if ((e.target as HTMLElement).classList.contains('memo-tab-close')) return
-        renameMemo(memo.id)
-      })
 
       tabbar.insertBefore(tab, addBtn)
     })
@@ -109,6 +109,8 @@ export function initMemo(): void {
     await saveMemo()
 
     activeId = id
+    const memo = memos.find((m) => m.id === id)
+    titleInput.value = memo?.name ?? ''
     const text = await window.api.memoLoad(id)
     textarea.value = text
     updateCharCount()
@@ -135,16 +137,20 @@ export function initMemo(): void {
     renderTabs()
   }
 
-  async function renameMemo(id: number): Promise<void> {
-    const memo = memos.find((m) => m.id === id)
+  // --- タイトル入力 → タブ名同期 ---
+  let titleTimer: ReturnType<typeof setTimeout> | null = null
+  titleInput.addEventListener('input', () => {
+    const memo = memos.find((m) => m.id === activeId)
     if (!memo) return
-    const newName = prompt('メモ名を入力:', memo.name)
-    if (newName && newName.trim() && newName.trim() !== memo.name) {
-      memo.name = newName.trim()
-      await window.api.memoRename(id, memo.name)
-      renderTabs()
-    }
-  }
+    const newName = titleInput.value.trim() || 'メモ'
+    memo.name = newName
+    renderTabs()
+    if (titleTimer) clearTimeout(titleTimer)
+    titleTimer = setTimeout(() => {
+      titleTimer = null
+      window.api.memoRename(activeId, newName).catch(console.error)
+    }, 800)
+  })
 
   addBtn.addEventListener('click', async () => {
     const newMemo = await window.api.memoCreate(`メモ ${memos.length + 1}`)
@@ -165,6 +171,59 @@ export function initMemo(): void {
       e.preventDefault()
       if (saveTimer) { clearTimeout(saveTimer); saveTimer = null }
       saveMemo()
+      return
+    }
+
+    // Tab: インデント / アンインデント
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      const start = textarea.selectionStart
+      const val = textarea.value
+      const lineStart = val.lastIndexOf('\n', start - 1) + 1
+      if (e.shiftKey) {
+        // アンインデント: 行頭のスペースを最大2つ削除
+        const spaces = val.slice(lineStart).match(/^ {1,4}/)?.[0].length ?? 0
+        if (spaces > 0) {
+          textarea.value = val.slice(0, lineStart) + val.slice(lineStart + spaces)
+          textarea.selectionStart = textarea.selectionEnd = Math.max(lineStart, start - spaces)
+        }
+      } else {
+        // インデント: 行頭に4スペース追加
+        textarea.value = val.slice(0, lineStart) + '    ' + val.slice(lineStart)
+        textarea.selectionStart = textarea.selectionEnd = start + 4
+      }
+      updateCharCount()
+      debounceSave()
+      if (showLineNumbers) updateLineNumbers()
+      return
+    }
+
+    // Enter: 箇条書きの継続
+    if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+      const start = textarea.selectionStart
+      const val = textarea.value
+      const lineStart = val.lastIndexOf('\n', start - 1) + 1
+      const lineText = val.slice(lineStart, start)
+      const bulletMatch = lineText.match(/^(\s*)([-*]) /)
+      if (bulletMatch) {
+        e.preventDefault()
+        const indent = bulletMatch[1]
+        const bullet = bulletMatch[2]
+        const prefix = indent + bullet + ' '
+        if (lineText.trimEnd() === (indent + bullet)) {
+          // 空の箇条書き行: 記号を削除して通常改行
+          textarea.value = val.slice(0, lineStart) + '\n' + val.slice(start)
+          textarea.selectionStart = textarea.selectionEnd = lineStart + 1
+        } else {
+          // 次行に同じ箇条書きを継続
+          const insertion = '\n' + prefix
+          textarea.value = val.slice(0, start) + insertion + val.slice(start)
+          textarea.selectionStart = textarea.selectionEnd = start + insertion.length
+        }
+        updateCharCount()
+        debounceSave()
+        if (showLineNumbers) updateLineNumbers()
+      }
     }
   })
 
@@ -174,6 +233,7 @@ export function initMemo(): void {
     const settings = await window.api.settingsLoad()
 
     showLineNumbers = settings.showLineNumbers ?? false
+    if (lineNumToggleSettings) lineNumToggleSettings.checked = showLineNumbers
     if (showLineNumbers) {
       lineNumbers.classList.remove('hidden')
       lineNumToggle.classList.add('active')
@@ -190,6 +250,7 @@ export function initMemo(): void {
       activeId = memos[0].id
     }
 
+    titleInput.value = memos.find((m) => m.id === activeId)?.name ?? ''
     textarea.value = await window.api.memoLoad(activeId)
     updateCharCount()
     renderTabs()

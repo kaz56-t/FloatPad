@@ -25,6 +25,7 @@
       <div id="memo-tabbar">
         <button id="memo-add-btn" title="新しいメモ">+</button>
       </div>
+      <input id="memo-title" type="text" placeholder="タイトル" spellcheck="false" />
       <div id="memo-editor-area">
         <div id="line-numbers" class="hidden"></div>
         <textarea id="memo-input" placeholder="メモを入力..."></textarea>
@@ -116,6 +117,19 @@
             <button class="accent-swatch" data-accent="orange" style="background:#ed8936" title="オレンジ"></button>
             <button class="accent-swatch" data-accent="purple" style="background:#9f7aea" title="パープル"></button>
             <button class="accent-swatch" data-accent="pink"   style="background:#fc8181" title="ピンク"></button>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h2>メモ</h2>
+          <div class="settings-row">
+            <label for="line-num-toggle-settings">行番号を表示</label>
+            <input id="line-num-toggle-settings" type="checkbox" />
+          </div>
+          <div class="settings-row">
+            <label for="font-size-slider">フォントサイズ</label>
+            <input id="font-size-slider" type="range" min="12" max="20" step="1" value="14" />
+            <span id="font-size-value">14px</span>
           </div>
         </section>
 

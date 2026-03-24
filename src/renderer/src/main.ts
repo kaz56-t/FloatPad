@@ -2,7 +2,7 @@ import './style.css'
 import { initMemo } from './memo'
 import { initCalculator } from './calculator'
 import { initWebViewer } from './webviewer'
-import { initSettings, applyTheme } from './settings'
+import { initSettings, applyTheme, applyFontSize } from './settings'
 
 const tabs = document.querySelectorAll<HTMLButtonElement>('.tab')
 const panels = document.querySelectorAll<HTMLDivElement>('.panel')
@@ -64,5 +64,6 @@ initSettings()
 // 設定からテーマと最後のタブを復元
 window.api.settingsLoad().then((settings) => {
   applyTheme(settings?.theme ?? 'auto', settings?.accentColor ?? 'blue')
+  applyFontSize(settings?.fontSize ?? 14)
   if (settings?.lastTab) switchTab(settings.lastTab)
 }).catch(console.error)
