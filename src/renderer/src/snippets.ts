@@ -49,7 +49,7 @@ export function initSnippets(): void {
 
       const titleSpan = document.createElement('span')
       titleSpan.className = 'snippet-item-title'
-      titleSpan.textContent = snippet.title
+      titleSpan.textContent = snippet.title || snippet.text
       titleSpan.title = snippet.text
 
       const deleteBtn = document.createElement('button')
@@ -80,9 +80,9 @@ export function initSnippets(): void {
   })
 
   saveBtn.addEventListener('click', async () => {
-    const title = titleInput.value.trim()
+    const title = titleInput.value.trim() || undefined
     const text = textInput.value.trim()
-    if (!title || !text) return
+    if (!text) return
 
     const maxId = snippets.reduce((max, s) => Math.max(max, s.id), 0)
     snippets.push({ id: maxId + 1, title, text })

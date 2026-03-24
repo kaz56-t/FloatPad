@@ -16,7 +16,7 @@ interface MemoMeta {
 
 interface SnippetItem {
   id: number
-  title: string
+  title?: string
   text: string
 }
 
@@ -141,6 +141,9 @@ async function createWindow(): Promise<void> {
       webviewTag: true
     }
   })
+
+  // フルスクリーンアプリ（YouTube等）の上にも表示されるよう screen-saver レベルを使用
+  win.setAlwaysOnTop(true, 'screen-saver')
 
   // 保存された透過度を反映
   if (currentSettings.opacity < 100) {

@@ -8,7 +8,7 @@ declare global {
 
   interface SnippetItem {
     id: number
-    title: string
+    title?: string
     text: string
   }
 }
