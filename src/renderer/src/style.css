@@ -171,16 +171,31 @@ body {
   height: 32px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow: hidden;
+  padding-right: 4px;
+}
+
+#memo-tabs-scroll {
+  display: flex;
+  align-items: center;
+  flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
-  flex-shrink: 0;
   scrollbar-width: none;
   padding: 0 4px;
   gap: 2px;
+  cursor: grab;
+  min-width: 0;
 }
 
-#memo-tabbar::-webkit-scrollbar {
+#memo-tabs-scroll::-webkit-scrollbar {
   display: none;
+}
+
+#memo-tabs-scroll.dragging {
+  cursor: grabbing;
+  user-select: none;
 }
 
 .memo-tab {

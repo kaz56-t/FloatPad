@@ -4,6 +4,7 @@ export function initMemo(): void {
   const charCount = document.getElementById('char-count')!
   const saveStatus = document.getElementById('save-status')!
   const tabbar = document.getElementById('memo-tabbar')!
+  const tabsScroll = document.getElementById('memo-tabs-scroll')!
   const addBtn = document.getElementById('memo-add-btn')!
   const lineNumToggle = document.getElementById('line-num-toggle')!
   const lineNumToggleSettings = document.getElementById('line-num-toggle-settings') as HTMLInputElement | null
@@ -68,7 +69,7 @@ export function initMemo(): void {
   // --- メモタブ描画 ---
 
   function renderTabs(): void {
-    tabbar.querySelectorAll('.memo-tab').forEach((el) => el.remove())
+    tabsScroll.querySelectorAll('.memo-tab').forEach((el) => el.remove())
 
     memos.forEach((memo) => {
       const tab = document.createElement('div')
@@ -92,9 +93,12 @@ export function initMemo(): void {
         tab.appendChild(closeBtn)
       }
 
-      tab.addEventListener('click', () => switchMemo(memo.id))
+      tab.addEventListener('click', () => { if (!didDrag) switchMemo(memo.id) })
+      tab.addEventListener('mousedown', (e) => {
+        if (e.button === 1) { e.preventDefault(); void deleteMemo(memo.id) }
+      })
 
-      tabbar.insertBefore(tab, addBtn)
+      tabsScroll.appendChild(tab)
     })
   }
 
@@ -116,6 +120,9 @@ export function initMemo(): void {
     updateCharCount()
     updateLineNumbers()
     renderTabs()
+    // アクティブタブをスクロール範囲内に収める
+    const activeTab = tabsScroll.querySelector<HTMLElement>('.memo-tab.active')
+    if (activeTab) activeTab.scrollIntoView({ block: 'nearest', inline: 'nearest' })
 
     window.api.settingsLoad()
       .then((s) => window.api.settingsSave({ ...s, activeMemoId: id }))
@@ -136,6 +143,36 @@ export function initMemo(): void {
     }
     renderTabs()
   }
+
+  // --- タブバー ドラッグスクロール ---
+  let dragActive = false
+  let didDrag = false
+  let dragStartX = 0
+  let scrollStart = 0
+  const DRAG_THRESHOLD = 5
+
+  tabsScroll.addEventListener('mousedown', (e) => {
+    if ((e.target as HTMLElement).closest('#memo-add-btn')) return
+    dragActive = true
+    didDrag = false
+    dragStartX = e.pageX
+    scrollStart = tabsScroll.scrollLeft
+  })
+
+  window.addEventListener('mouseup', () => {
+    dragActive = false
+    tabsScroll.classList.remove('dragging')
+  })
+
+  window.addEventListener('mousemove', (e) => {
+    if (!dragActive) return
+    const delta = e.pageX - dragStartX
+    if (!didDrag && Math.abs(delta) > DRAG_THRESHOLD) {
+      didDrag = true
+      tabsScroll.classList.add('dragging')
+    }
+    if (didDrag) tabsScroll.scrollLeft = scrollStart - delta
+  })
 
   // --- タイトル入力 → タブ名同期 ---
   let titleTimer: ReturnType<typeof setTimeout> | null = null
