@@ -14,5 +14,12 @@ contextBridge.exposeInMainWorld('api', {
   chooseFolder: () => ipcRenderer.invoke('dialog:chooseFolder'),
   globalShortcutUpdate: (accelerator: string) => ipcRenderer.invoke('globalShortcut:update', accelerator),
   snippetsLoad: () => ipcRenderer.invoke('snippets:load'),
-  snippetsSave: (data: object[]) => ipcRenderer.invoke('snippets:save', data)
+  snippetsSave: (data: object[]) => ipcRenderer.invoke('snippets:save', data),
+  terminalSpawn: () => ipcRenderer.invoke('terminal:spawn'),
+  terminalWrite: (data: string) => ipcRenderer.invoke('terminal:write', data),
+  terminalResize: (cols: number, rows: number) => ipcRenderer.invoke('terminal:resize', cols, rows),
+  terminalKill: () => ipcRenderer.invoke('terminal:kill'),
+  onTerminalData: (cb: (data: string) => void) => {
+    ipcRenderer.on('terminal:data', (_, data: string) => cb(data))
+  }
 })
