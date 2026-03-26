@@ -957,3 +957,30 @@ body.mini #memo-status {
   border-color: var(--accent);
   color: white;
 }
+
+/* ======= ターミナルパネル ======= */
+#panel-terminal {
+  padding: 0;
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+}
+
+#panel-terminal.active {
+  display: flex;
+}
+
+#terminal-container {
+  flex: 1;
+  overflow: hidden;
+  padding: 4px;
+  background: var(--bg);
+}
+
+#terminal-container .xterm {
+  height: 100%;
+}
+
+#terminal-container .xterm-viewport {
+  overflow-y: auto;
+}

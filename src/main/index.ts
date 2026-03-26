@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, dialog, globalShortcut } from 'electron'
 import { join } from 'path'
 import { promises as fs } from 'fs'
+import { spawn as ptySpawn, IPty } from 'node-pty'
 
 interface WindowBounds {
   x: number
@@ -128,6 +129,8 @@ async function saveSettings(data: Settings): Promise<void> {
 let currentSettings: Settings = { ...defaultSettings }
 // ミニモード用: 折りたたむ前の高さを記録
 let savedWindowHeight = 560
+// ターミナル用PTYプロセス
+let ptyProcess: IPty | null = null
 
 async function createWindow(): Promise<void> {
   currentSettings = await loadSettings()
@@ -172,8 +175,9 @@ async function createWindow(): Promise<void> {
   }
   registerHotkey(currentSettings.hotkey || 'Ctrl+Shift+Space')
 
-  // ウィンドウ閉時に位置・サイズを保存
+  // ウィンドウ閉時に位置・サイズを保存、PTYを終了
   win.on('close', () => {
+    if (ptyProcess) { ptyProcess.kill(); ptyProcess = null }
     const bounds = win.getBounds()
     currentSettings.windowBounds = bounds
     saveSettings(currentSettings).catch(console.error)
@@ -362,6 +366,45 @@ ipcMain.handle('snippets:save', async (_, data: SnippetItem[]) => {
     console.error('定型文の保存に失敗しました:', err)
     return false
   }
+})
+
+// IPC: ターミナル — PTYスポーン
+ipcMain.handle('terminal:spawn', async (event) => {
+  if (ptyProcess) { ptyProcess.kill(); ptyProcess = null }
+  const shell = process.platform === 'win32' ? 'powershell.exe' : (process.env.SHELL ?? 'bash')
+  ptyProcess = ptySpawn(shell, [], {
+    name: 'xterm-256color',
+    cols: 80,
+    rows: 24,
+    cwd: process.env.HOME ?? process.cwd(),
+    env: process.env as Record<string, string>
+  })
+  const win = BrowserWindow.fromWebContents(event.sender)
+  ptyProcess.onData((data) => {
+    win?.webContents.send('terminal:data', data)
+  })
+  ptyProcess.onExit(() => {
+    ptyProcess = null
+  })
+  return true
+})
+
+// IPC: ターミナル — 入力データをPTYへ送信
+ipcMain.handle('terminal:write', async (_, data: string) => {
+  ptyProcess?.write(data)
+  return true
+})
+
+// IPC: ターミナル — PTYのサイズ変更
+ipcMain.handle('terminal:resize', async (_, cols: number, rows: number) => {
+  ptyProcess?.resize(cols, rows)
+  return true
+})
+
+// IPC: ターミナル — PTY終了
+ipcMain.handle('terminal:kill', async () => {
+  if (ptyProcess) { ptyProcess.kill(); ptyProcess = null }
+  return true
 })
 
 // target="_blank" リンクをシステムブラウザで開く

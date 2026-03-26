@@ -4,6 +4,7 @@ import { initCalculator } from './calculator'
 import { initWebViewer } from './webviewer'
 import { initSettings, applyTheme, applyFontSize } from './settings'
 import { initSnippets } from './snippets'
+import { initTerminal } from './terminal'
 
 const tabs = document.querySelectorAll<HTMLButtonElement>('.tab')
 const panels = document.querySelectorAll<HTMLDivElement>('.panel')
@@ -74,6 +75,7 @@ initCalculator()
 initWebViewer()
 initSettings()
 initSnippets()
+initTerminal()
 
 // 設定からテーマと最後のタブを復元
 window.api.settingsLoad().then((settings) => {

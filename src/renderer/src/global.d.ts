@@ -45,6 +45,11 @@ declare global {
       globalShortcutUpdate: (accelerator: string) => Promise<boolean>
       snippetsLoad: () => Promise<SnippetItem[]>
       snippetsSave: (data: SnippetItem[]) => Promise<boolean>
+      terminalSpawn: () => Promise<boolean>
+      terminalWrite: (data: string) => Promise<boolean>
+      terminalResize: (cols: number, rows: number) => Promise<boolean>
+      terminalKill: () => Promise<boolean>
+      onTerminalData: (cb: (data: string) => void) => void
     }
   }
 }
