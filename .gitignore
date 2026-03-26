@@ -6,3 +6,4 @@ user-data
 test-results
 resources/icon.png
 *.tsbuildinfo
+src-tauri/target/
