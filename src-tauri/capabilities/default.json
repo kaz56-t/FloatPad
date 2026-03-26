@@ -1,0 +1,10 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema/desktop-capability.json",
+  "identifier": "default",
+  "description": "FloatPad のデフォルトケーパビリティ",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:default"
+  ]
+}
