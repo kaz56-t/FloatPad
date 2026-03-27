@@ -1,3 +1,4 @@
+import './tauri-bridge'
 import './style.css'
 import { initMemo } from './memo'
 import { initCalculator } from './calculator'
