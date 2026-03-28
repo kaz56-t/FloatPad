@@ -65,15 +65,24 @@ if (isTauri()) {
     snippetsSave: (data: SnippetItem[]) =>
       invoke('snippets_save', { data }),
 
-    // --- ターミナル（Tauri では未対応・スタブ）---
-    terminalSpawn: () => {
-      console.warn('[Tauri] terminal機能は未対応です')
-      return Promise.resolve(false)
+    // --- ターミナル（portable-pty 経由） ---
+    terminalSpawn: (): Promise<boolean> =>
+      invoke('terminal_spawn'),
+
+    terminalWrite: (data: string): Promise<boolean> =>
+      invoke('terminal_write', { data }),
+
+    terminalResize: (cols: number, rows: number): Promise<boolean> =>
+      invoke('terminal_resize', { cols, rows }),
+
+    terminalKill: (): Promise<boolean> =>
+      invoke('terminal_kill'),
+
+    onTerminalData: (cb: (data: string) => void): void => {
+      listen<string>('terminal:data', (event) => {
+        cb(event.payload)
+      }).catch(console.error)
     },
-    terminalWrite: (_data: string) => Promise.resolve(false),
-    terminalResize: (_cols: number, _rows: number) => Promise.resolve(false),
-    terminalKill: () => Promise.resolve(false),
-    onTerminalData: (_cb: (data: string) => void) => { /* Tauri未対応 */ },
   }
 
   window.api = tauriApi
